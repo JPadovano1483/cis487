@@ -1,13 +1,45 @@
+/* Jamie Padovano */
+
 body {
   padding: 100px;
 }
 
-/*
-#square {
-  width: 150px;
-  height: 150px;
-  padding-top: 10px;
-  text-align: center;
-  background-color: rgb(250, 200, 120);
+@keyframes myHorizAnimation
+{
+    from {
+        left: -30%;
+    }
+    to {
+        left: 100%;
+        display: none;
+    }
 }
-*/
+
+@keyframes myVertAnimation
+{
+    from {
+        top: -50%;
+    }
+    to {
+        top: 100%;
+        display: none;
+    }
+}
+
+div {
+  position: fixed;
+  border-style: solid;
+  transform-origin: center center 0;
+}
+
+.vertical {
+  animation: myVertAnimation;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+.horizontal {
+  animation: myHorizAnimation;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
