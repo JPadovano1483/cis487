@@ -1,0 +1,12 @@
+body {
+  padding: 10px;
+}
+
+.description {
+  margin-top: 20px;
+}
+
+.inline {
+  display: inline-block;
+  vertical-align: middle;
+}
