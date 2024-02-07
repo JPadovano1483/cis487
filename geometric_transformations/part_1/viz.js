@@ -89,7 +89,7 @@ function pTimesM(p, m) {
              p0 * m1 + p1 * m5 + p2 * m9 + p3 * m13,
              p0 * m2 + p1 * m6 + p2 * m10 + p3 * m14,
              p0 * m3 + p1 * m7 + p2 * m11 + p3 * m15];
-  }
+  } 
 }
 
 function main() {
@@ -98,14 +98,13 @@ function main() {
   let p = [2, 3, 1];
   let pDiv = document.querySelector("#point2D");
   pDiv.innerHTML = matrixHTML(p);
-
   
   // 2D transformation matrix.
   let m = [ 2, 0,
-    0, 1,
-    0, 3 ];
-    let mDiv = document.querySelector("#matrix2D");
-    mDiv.innerHTML = matrixHTML(m);
+            0, 1,
+            0, 3 ];
+  let mDiv = document.querySelector("#matrix2D");
+  mDiv.innerHTML = matrixHTML(m);
 
   let q = pTimesM(p, m);
   let qDiv = document.querySelector("#newPoint2D");
@@ -148,13 +147,21 @@ function main() {
   // to the yellow square (after flipping Y-axis to point upward).
   d.style.transform = `scaleY(-1) matrix(${m})`;
 
+  p = [2, 3, 0, 1]
+  pDiv = document.querySelector("#point3D")
+  pDiv.innerHTML = matrixHTML(p)
+
   // 3D transformation matrix.
-  m = [ 1, 0, 0, 0,
+  m = [ 2, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, 1, 0,
-        0, 0, 0, 1 ];
+        0, 3, 0, 1 ];
   mDiv = document.querySelector("#matrix3D");
   mDiv.innerHTML = matrixHTML(m);
+
+  q = pTimesM(p, m)
+  qDiv = document.querySelector("#newPoint3D")
+  qDiv.innerHTML = matrixHTML(q)
   
   // xyz is container for 3D coordinate system.
   let xyz = document.querySelector("#xyz");
