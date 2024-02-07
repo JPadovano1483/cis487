@@ -99,7 +99,11 @@ function mTimesT(m, t) {
 function rotateZ(m, a) {
   const s = Math.sin(a);
   const c = Math.cos(a);
-
+  const [m00, m01,
+         m10, m11,
+         m20, m21] = m
+  
+  return [ m00 * c + m10 * -s + m20 * 0, m01 * s + m11 * c + m21 * 0]
   // multiply m by 
   // [c, s,
 //    -s, c,
@@ -116,8 +120,8 @@ function main() {
   
   // 2D transformation matrix.
   let m = [ 1, 0,
-    0, 1,
-    0, 0 ];
+            0, 1,
+            0, 0 ];
   
   m = rotateZ(m, Math.PI / 8);
 
@@ -165,13 +169,21 @@ function main() {
   // to the yellow square (after flipping Y-axis to point upward).
   d.style.transform = `scaleY(-1) matrix(${m})`;
 
+  p = [2, 3, 0, 1]
+  pDiv = document.querySelector("#point3D")
+  pDiv.innerHTML = matrixHTML(p)
+
   // 3D transformation matrix.
-  m = [ 1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1 ];
-  mDiv = document.querySelector("#matrix3D");
-  mDiv.innerHTML = matrixHTML(m);
+  m = [2, 0, 0, 0,
+       0, 1, 0, 0,
+       0, 0, 1, 0,
+       0, 3, 0, 1]
+  mDiv = document.querySelector("#matrix3D")
+  mDiv.innerHTML = matrixHTML(m)
+
+  q = pTimesM(p, m)
+  qDiv = document.querySelector("#newPoint3D")
+  qDiv.innerHTML = matrixHTML(q)
   
   // xyz is container for 3D coordinate system.
   let xyz = document.querySelector("#xyz");
