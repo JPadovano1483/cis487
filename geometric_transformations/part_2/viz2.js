@@ -1,3 +1,5 @@
+// Jamie Padovano
+
 "use strict";
 
 // Format numbers to be (at least) <spaces> characters wide,
@@ -94,43 +96,78 @@ function pTimesM(p, m) {
 
 function mTimesT(m, t) {
   // multiply m * t, return composite transformation matrix
+  // 2D
+  if (m.length == 6) {
+    const [ m00, m01,
+            m10, m11,
+            m20, m21 ] = m;
+    const [ t00, t01,
+            t10, t11,
+            t20, t21 ] = t;
+    return  [ m00 * t00 + m01 * t10,
+              m00 * t01 + m01 * t11,
+
+              m10 * t00 + m11 * t10,
+              m10 * t01 + m11 * t11,
+
+              m20 * t00 + m21 * t10 + t20,
+              m20 * t01 + m21 * t11 + t21];
+  // 3D
+  } else {
+    const [ m0, m1, m2, m3,
+      m4, m5, m6, m7,
+      m8, m9, m10, m11,
+      m12, m13, m14, m15 ] = m;
+    const [ t0, t1, t2, t3,
+            t4, t5, t6, t7,
+            t8, t9, t10, t11,
+            t12, t13, t14, t15 ] = t;
+    return [ m0 * t0 + m1 * t4 + m2 * t8 + m3 * t12,
+             m0 * t1 + m1 * t5 + m2 * t9 + m3 * t13,
+             m0 * t2 + m1 * t6 + m2 * t10 + m3 * t14,
+             m0 * t3  + m1 * t7 + m2 * t11 + m3 * t15,
+            
+             m4 * t0 + m5 * t4 + m6 * t8 + m7 * t12,
+             m4 * t1 + m5 * t5 + m6 * t9 + m7 * t13,
+             m4 * t2 + m5 * t6 + m6 * t10 + m7 * t14,
+             m4 * t3  + m5 * t7 + m6 * t11 + m7 * t15,
+            
+             m8 * t0 + m9 * t4 + m10 * t8 + m11 * t12,
+             m8 * t1 + m9 * t5 + m10 * t9 + m11 * t13,
+             m8 * t2 + m9 * t6 + m10 * t10 + m11 * t14,
+             m8 * t3  + m9 * t7 + m10 * t11 + m11 * t15,
+            
+             m12 * t0 + m13 * t4 + m14 * t8 + m15 * t12,
+             m12 * t1 + m13 * t5 + m14 * t9 + m15 * t13,
+             m12 * t2 + m13 * t6 + m14 * t10 + m15 * t14,
+             m12 * t3  + m13 * t7 + m14 * t11 + m15 * t15];
+  }
+  
 }
 
 function rotateZ(m, a) {
   const s = Math.sin(a);
   const c = Math.cos(a);
-  const [m00, m01,
-         m10, m11,
-         m20, m21] = m
-  
-  return [ m00 * c + m10 * -s + m20 * 0, m01 * s + m11 * c + m21 * 0]
-  // multiply m by 
-  // [c, s,
-//    -s, c,
-//    0, 0]
+  const rotationMatrix = [c, s,
+                          -s, c,
+                          0, 0];
+  return mTimesT(m, rotationMatrix);
+}
+
+function rotateY3d(m, a) {
+  const s = Math.sin(a);
+  const c = Math.cos(a);
+  const rotationMatrix = [ c, 0, -s, 0,
+                           0, 1, 0, 0,
+                           s, 0, c, 0,
+                           0, 0, 0, 1];
+  return mTimesT(m, rotationMatrix);
 }
 
 function main() {
   let Q = 100; // Coordinate system quadrant size in pixels.
 
-  let p = [1, 1, 1];
-  let pDiv = document.querySelector("#point2D");
-  pDiv.innerHTML = matrixHTML(p);
-
-  
-  // 2D transformation matrix.
-  let m = [ 1, 0,
-            0, 1,
-            0, 0 ];
-  
-  m = rotateZ(m, Math.PI / 8);
-
-  let mDiv = document.querySelector("#matrix2D");
-  mDiv.innerHTML = matrixHTML(m);
-
-  let q = pTimesM(p, m);
-  let qDiv = document.querySelector("#newPoint2D");
-  qDiv.innerHTML = matrixHTML(q);
+  // 2D animation
 
   // xy is container for 2D coordinate system.
   let xy = document.querySelector("#xy");
@@ -165,25 +202,7 @@ function main() {
   d.style.backgroundColor = "rgba(255, 220, 0, 0.8)";
   d.style.border = "1px solid black";
 
-  // Apply 2D transformation represented by values in matrix m
-  // to the yellow square (after flipping Y-axis to point upward).
-  d.style.transform = `scaleY(-1) matrix(${m})`;
-
-  p = [2, 3, 0, 1]
-  pDiv = document.querySelector("#point3D")
-  pDiv.innerHTML = matrixHTML(p)
-
-  // 3D transformation matrix.
-  m = [2, 0, 0, 0,
-       0, 1, 0, 0,
-       0, 0, 1, 0,
-       0, 3, 0, 1]
-  mDiv = document.querySelector("#matrix3D")
-  mDiv.innerHTML = matrixHTML(m)
-
-  q = pTimesM(p, m)
-  qDiv = document.querySelector("#newPoint3D")
-  qDiv.innerHTML = matrixHTML(q)
+  // 3d animation
   
   // xyz is container for 3D coordinate system.
   let xyz = document.querySelector("#xyz");
@@ -198,59 +217,115 @@ function main() {
   xyz.style.transform = "rotateX(-15deg) rotateY(20deg)";
   
   // +x +y quadrant (transparent blue).
-  d = document.createElement("div");
-  xyz.appendChild(d);
-  d.style.width = d.style.height = `${Q}px`;
-  d.style.position = "absolute";
-  d.style.left = `${Q}px`;
-  d.style.backgroundColor = "rgba(0, 100, 255, 0.1)";
-  d.style.borderLeft = d.style.borderBottom = "1px solid black";
+  let d2 = document.createElement("div");
+  xyz.appendChild(d2);
+  d2.style.width = d2.style.height = `${Q}px`;
+  d2.style.position = "absolute";
+  d2.style.left = `${Q}px`;
+  d2.style.backgroundColor = "rgba(0, 100, 255, 0.1)";
+  d2.style.borderLeft = d2.style.borderBottom = "1px solid black";
 
   // -x -y quadrant.
-  d = document.createElement("div");
-  xyz.appendChild(d);
-  d.style.width = d.style.height = `${Q}px`;
-  d.style.position = "absolute";
-  d.style.top = `${Q}px`;
-  d.style.borderRight = d.style.borderTop = "1px solid black";
+  d2 = document.createElement("div");
+  xyz.appendChild(d2);
+  d2.style.width = d2.style.height = `${Q}px`;
+  d2.style.position = "absolute";
+  d2.style.top = `${Q}px`;
+  d2.style.borderRight = d2.style.borderTop = "1px solid black";
 
   // +x -z quadrant (transparent blue).  -z is "into the screen."
-  d = document.createElement("div");
-  xyz.appendChild(d);
-  d.style.width = d.style.height = `${Q}px`;
-  d.style.position = "absolute";
-  d.style.left = `${Q}px`;
-  d.style.backgroundColor = "rgba(0, 100, 255, 0.1)";
-  d.style.borderLeft = d.style.borderBottom = "1px solid black";
-  d.style.transformOrigin = `0px ${Q}px 0px`;
-  d.style.transform = "rotateX(90deg)";
+  d2 = document.createElement("div");
+  xyz.appendChild(d2);
+  d2.style.width = d2.style.height = `${Q}px`;
+  d2.style.position = "absolute";
+  d2.style.left = `${Q}px`;
+  d2.style.backgroundColor = "rgba(0, 100, 255, 0.1)";
+  d2.style.borderLeft = d2.style.borderBottom = "1px solid black";
+  d2.style.transformOrigin = `0px ${Q}px 0px`;
+  d2.style.transform = "rotateX(90deg)";
 
   // -x +z quadrant.  +z is "out of the screen," towards the viewer.
-  d = document.createElement("div");
-  xyz.appendChild(d);
-  d.style.width = d.style.height = `${Q}px`;
-  d.style.position = "absolute";
-  d.style.top = `${Q}px`;
-  d.style.borderRight = d.style.borderTop = "1px solid black";
-  d.style.transformOrigin = "100px 0px 0px";
-  d.style.transform = "rotateX(90deg)";
+  d2 = document.createElement("div");
+  xyz.appendChild(d2);
+  d2.style.width = d2.style.height = `${Q}px`;
+  d2.style.position = "absolute";
+  d2.style.top = `${Q}px`;
+  d2.style.borderRight = d2.style.borderTop = "1px solid black";
+  d2.style.transformOrigin = "100px 0px 0px";
+  d2.style.transform = "rotateX(90deg)";
 
   // A yellow square to move around.
-  d = document.createElement("div");
-  xyz.appendChild(d);
-  d.style.width = d.style.height = `${Q * 0.5}px`; // Size of square.
-  d.style.position = "absolute";
-  d.style.left = d.style.top =
+  d2 = document.createElement("div");
+  xyz.appendChild(d2);
+  d2.style.width = d2.style.height = `${Q * 0.5}px`; // Size of square.
+  d2.style.position = "absolute";
+  d2.style.left = d2.style.top =
       `${Q * 0.75}px`;  // Offset in xy-plane from coordinate
                         // system top left corner.
-  d.style.backgroundColor = "rgba(255, 220, 0, 0.8)";
-  d.style.border = "1px solid black";
+  d2.style.backgroundColor = "rgba(255, 220, 0, 0.8)";
+  d2.style.border = "1px solid black";
 
-  // Apply 3D transformation represented by values in matrix m
-  // to the yellow square (after flipping Y-axis to point upward
-  // and bringing square slightly forward, so that when it's in
-  // the xy-plane it appears slightly in front of the axes).
-  d.style.transform = `scaleY(-1) translateZ(2px) matrix3d(${m})`;
+  // // Apply 3D transformation represented by values in matrix m
+  // // to the yellow square (after flipping Y-axis to point upward
+  // // and bringing square slightly forward, so that when it's in
+  // // the xy-plane it appears slightly in front of the axes).
+  // d.style.transform = `scaleY(-1) translateZ(2px) matrix3d(${m3d})`;
+
+  // 2D
+
+  let p = [1, 1, 1];
+  let pDiv = document.querySelector("#point2D");
+  pDiv.innerHTML = matrixHTML(p);
+
+  // 2D transformation matrix.
+  let m = [ 1, 0,
+            0, 1,
+            0, 0 ];
+
+  let mDiv = document.querySelector("#matrix2D");
+  let qDiv = document.querySelector("#newPoint2D");
+
+  // 3D
+
+  let p3d = [2, 3, 0, 1]
+  let pDiv3d = document.querySelector("#point3D")
+  pDiv3d.innerHTML = matrixHTML(p3d);
+  
+
+  // 3D transformation matrix.
+  let m3d = [2, 0, 0, 0,
+       0, 1, 0, 0,
+       0, 0, 1, 0,
+       0, 3, 0, 1]
+  let mDiv3d = document.querySelector("#matrix3D")
+  
+  let qDiv3d = document.querySelector("#newPoint3D")
+  
+  function animate() {
+    // 2D
+    m = rotateZ(m, Math.PI / 50);
+    
+    mDiv.innerHTML = matrixHTML(m);
+    
+    let q = pTimesM(p, m);
+    qDiv.innerHTML = matrixHTML(q);
+    
+    d.style.transform = `scaleY(-1) matrix(${m})`;
+
+    // 3D
+    m3d = rotateY3d(m3d, Math.PI / 50);
+    mDiv3d.innerHTML = matrixHTML(m3d);
+
+    let q3d = pTimesM(p3d, m3d);
+    qDiv3d.innerHTML = matrixHTML(q3d);
+
+
+    d2.style.transform = `scaleY(-1) translateZ(2px) matrix3d(${m3d})`;
+
+    requestAnimationFrame(animate);
+  }
+
+  requestAnimationFrame(animate);
 }
 
 window.onload = main;

@@ -1,5 +1,3 @@
-// Jamie Padovano
-
 "use strict";
 
 // Format numbers to be (at least) <spaces> characters wide,
@@ -28,25 +26,7 @@ function matrixHTML(a) {
   // For 6-value array, representing 2D transformation matrix.
   // (Full matrix would have 9 values, but only the 6 values
   // needed for scale, rotation and translation are used.)
-  if (a.length == 2) {
-    return "<pre>\n" +
-      nw + "                " + ne + "\n" +
-      vt + ` ${f(a[0])}  ${f(a[1])} ` + vt + "\n" +
-      sw + "                " + se + "\n" +
-      "</pre>";
-  } else if (a.length == 3) {
-    return "<pre>\n" +
-      nw + "                        " + ne + "\n" +
-      vt + ` ${f(a[0])}  ${f(a[1])}  ${f(a[2])} ` + vt + "\n" +
-      sw + "                        " + se + "\n" +
-      "</pre>";
-  } else if (a.length == 4) {
-    return "<pre>\n" +
-      nw + "                                " + ne + "\n" +
-      vt + ` ${f(a[ 0])}  ${f(a[ 1])}  ${f(a[ 2])}  ${f(a[ 3])} ` + vt + "\n" +
-      sw + "                                " + se + "\n" +
-      "</pre>";
-  } else if (a.length == 6) {
+  if (a.length == 6) {
     return "<pre>\n" +
       nw + "                " + ne + "\n" +
       vt + ` ${f(a[0])}  ${f(a[1])} ` + vt + "\n" +
@@ -68,49 +48,15 @@ function matrixHTML(a) {
   }
 }
 
-function pTimesM(p, m) {
-
-  // 2D
-  if (p.length == 3) {
-    const [ p0, p1, p2 ] = p;
-    const [ m00, m01,
-            m10, m11,
-            m20, m21 ] = m;
-
-    return [ p0 * m00 + p1 * m10 + p2 * m20,
-             p0 * m01 + p1 * m11 + p2 * m21 ];
-  // 3D
-  } else {
-    const [ p0, p1, p2, p3 ] = p;
-    const [ m0, m1, m2, m3,
-            m4, m5, m6, m7,
-            m8, m9, m10, m11,
-            m12, m13, m14, m15 ] = m;
-
-    return [ p0 * m0 + p1 * m4 + p2 * m8 + p3 * m12,
-             p0 * m1 + p1 * m5 + p2 * m9 + p3 * m13,
-             p0 * m2 + p1 * m6 + p2 * m10 + p3 * m14,
-             p0 * m3 + p1 * m7 + p2 * m11 + p3 * m15];
-  } 
-}
-
 function main() {
   let Q = 100; // Coordinate system quadrant size in pixels.
 
-  let p = [2, 3, 1];
-  let pDiv = document.querySelector("#point2D");
-  pDiv.innerHTML = matrixHTML(p);
-  
   // 2D transformation matrix.
-  let m = [ 2, 0,
+  let m = [ 1, 0,
             0, 1,
-            0, 3 ];
+            0, 0 ];
   let mDiv = document.querySelector("#matrix2D");
   mDiv.innerHTML = matrixHTML(m);
-
-  let q = pTimesM(p, m);
-  let qDiv = document.querySelector("#newPoint2D");
-  qDiv.innerHTML = matrixHTML(q);
 
   // xy is container for 2D coordinate system.
   let xy = document.querySelector("#xy");
@@ -149,21 +95,13 @@ function main() {
   // to the yellow square (after flipping Y-axis to point upward).
   d.style.transform = `scaleY(-1) matrix(${m})`;
 
-  p = [2, 3, 0, 1]
-  pDiv = document.querySelector("#point3D")
-  pDiv.innerHTML = matrixHTML(p)
-
   // 3D transformation matrix.
-  m = [ 2, 0, 0, 0,
+  m = [ 1, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, 1, 0,
-        0, 3, 0, 1 ];
+        0, 0, 0, 1 ];
   mDiv = document.querySelector("#matrix3D");
   mDiv.innerHTML = matrixHTML(m);
-
-  q = pTimesM(p, m)
-  qDiv = document.querySelector("#newPoint3D")
-  qDiv.innerHTML = matrixHTML(q)
   
   // xyz is container for 3D coordinate system.
   let xyz = document.querySelector("#xyz");
