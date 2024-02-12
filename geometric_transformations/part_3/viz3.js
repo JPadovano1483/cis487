@@ -270,32 +270,6 @@ function main() {
   d2.style.transform = `scaleY(-1) translateZ(2px) matrix3d(${m3d})`;
   d3.style.transform = `scaleY(-1) translateZ(2px) matrix3d(${m3d})`;
 
-  // function animate() {
-  //   // 2D
-  //   m = rotateZ(m, Math.PI / 50);
-    
-  //   mDiv.innerHTML = matrixHTML(m);
-    
-  //   let q = pTimesM(p, m);
-  //   qDiv.innerHTML = matrixHTML(q);
-    
-  //   d.style.transform = `scaleY(-1) matrix(${m})`;
-
-  //   // 3D
-  //   m3d = rotateY3d(m3d, Math.PI / 50);
-  //   mDiv3d.innerHTML = matrixHTML(m3d);
-
-  //   let q3d = pTimesM(p3d, m3d);
-  //   qDiv3d.innerHTML = matrixHTML(q3d);
-
-
-  //   d2.style.transform = `scaleY(-1) translateZ(2px) matrix3d(${m3d})`;
-
-  //   requestAnimationFrame(animate);
-  // }
-
-  // requestAnimationFrame(animate);
-
   function animate(frames, update) {
     return new Promise((resolve) => {
       function a(f) {
