@@ -230,16 +230,46 @@ function main() {
   d2.style.backgroundColor = "rgba(255, 220, 0, 0.8)";
   d2.style.border = "1px solid black";
 
+  let d3 = document.createElement("div");
+  xyz.appendChild(d3);
+  d3.style.width = d3.style.height = `${Q * 0.5}px`; // Size of square.
+  d3.style.position = "absolute";
+  d3.style.left = d3.style.top =
+      `${Q * 0.75}px`;  // Offset in xy-plane from coordinate
+                        // system top left corner.
+  d3.style.backgroundColor = "rgba(255, 58, 0, 0.8)";
+  d3.style.border = "1px solid black";
+
+  let p3d = [2, 3, 0, 1]
+  let pDiv3dYellow = document.querySelector("#point3DYellow")
+  pDiv3dYellow.innerHTML = matrixHTML(p3d);
+  let pDiv3dRed = document.querySelector("#point3DRed")
+  pDiv3dRed.innerHTML = matrixHTML(p3d);
+
   // 3D transformation matrix.
-  let m3d;
-  // = [2, 0, 0, 0,
-  //            0, 1, 0, 0,
-  //            0, 0, 1, 0,
-  //            0, 3, 0, 1]
-  let mDiv3d = document.querySelector("#matrix3D")
+  let m3d= [1, 0, 0, 0,
+             0, 1, 0, 0,
+             0, 0, 1, 0,
+             50, 50, 0, 1];
+  let m3dSecond= [1, 0, 0, 0,
+             0, 1, 0, 0,
+             0, 0, 1, 0,
+             50, 50, 0, 1];
+
+  let mDiv3dYellow = document.querySelector("#matrix3DYellow")
+  mDiv3dYellow.innerHTML = matrixHTML(m3d);
+  let mDiv3dRed= document.querySelector("#matrix3DRed")
+  mDiv3dRed.innerHTML = matrixHTML(m3dSecond);
   
-  let qDiv3d = document.querySelector("#newPoint3D")
-  
+  let qDiv3dYellow = document.querySelector("#newPoint3DYellow")
+  let qDiv3dRed = document.querySelector("#newPoint3DRed")
+  let q3d = pTimesM(p3d, m3d);
+  let q3dSecond = pTimesM(p3d, m3dSecond);
+  qDiv3dYellow.innerHTML = matrixHTML(q3d);
+  qDiv3dRed.innerHTML = matrixHTML(q3dSecond);
+  d2.style.transform = `scaleY(-1) translateZ(2px) matrix3d(${m3d})`;
+  d3.style.transform = `scaleY(-1) translateZ(2px) matrix3d(${m3d})`;
+
   // function animate() {
   //   // 2D
   //   m = rotateZ(m, Math.PI / 50);
@@ -282,19 +312,64 @@ function main() {
   }
 
   (async function doThings() {
+    await animate(100, () => {}); // pause for 100 frames
     await animate(100, () => {
       m3d = [1, 0, 0, 0,
              0, 1, 0, 0,
              0, 0, 1, 0,
-             0, 3, 0, 1];
-      mDiv3d.innerHTML = matrixHTML(m3d);
+             0, 0, 0, 1];
+      m3dSecond = [2, 0, 0, 0,
+                   0, 2, 0, 0,
+                   0, 0, 2, 0,
+                   50, 50, 0, 1];
+      mDiv3dYellow.innerHTML = matrixHTML(m3d);
+      mDiv3dRed.innerHTML = matrixHTML(m3dSecond);
 
       let q3d = pTimesM(p3d, m3d);
-      qDiv3d.innerHTML = matrixHTML(q3d);
+      let q3dSecond = pTimesM(p3d, m3dSecond);
+      qDiv3dYellow.innerHTML = matrixHTML(q3d);
+      qDiv3dRed.innerHTML = matrixHTML(q3dSecond);
       d2.style.transform = `scaleY(-1) translateZ(2px) matrix3d(${m3d})`;
+      d3.style.transform = `scaleY(-1) translateZ(2px) matrix3d(${m3dSecond})`;
+    }); 
+    await animate(100, () => {
+      m3d = [2, 0, 0, 0,
+             0, 2, 0, 0,
+             0, 0, 2, 0,
+             0, 0, 0, 1];
+      m3dSecond = [1, 0, 0, 0,
+                   0, 1, 0, 0,
+                   0, 0, 1, 0,
+                   0, 0, 0, 1];
+      mDiv3dYellow.innerHTML = matrixHTML(m3d);
+      mDiv3dRed.innerHTML = matrixHTML(m3dSecond);
+
+      let q3d = pTimesM(p3d, m3d);
+      let q3dSecond = pTimesM(p3d, m3dSecond);
+      qDiv3dYellow.innerHTML = matrixHTML(q3d);
+      qDiv3dRed.innerHTML = matrixHTML(q3dSecond);
+      d2.style.transform = `scaleY(-1) translateZ(2px) matrix3d(${m3d})`;
+      d3.style.transform = `scaleY(-1) translateZ(2px) matrix3d(${m3dSecond})`;
     });
-    // await animate(100, () => {}); // pause for 100 frames
-    // await animate(100, () => { h.style.top = `${h.y--}px`; });
+    await animate(100, () => {
+      m3d = [2, 0, 0, 0,
+             0, 2, 0, 0,
+             0, 0, 2, 0,
+             50, 50, 0, 1];
+      m3dSecond = [2, 0, 0, 0,
+                   0, 2, 0, 0,
+                   0, 0, 2, 0,
+                   0, 0, 0, 1];
+      mDiv3dYellow.innerHTML = matrixHTML(m3d);
+      mDiv3dRed.innerHTML = matrixHTML(m3dSecond);
+
+      let q3d = pTimesM(p3d, m3d);
+      let q3dSecond = pTimesM(p3d, m3dSecond);
+      qDiv3dYellow.innerHTML = matrixHTML(q3d);
+      qDiv3dRed.innerHTML = matrixHTML(q3dSecond);
+      d2.style.transform = `scaleY(-1) translateZ(2px) matrix3d(${m3d})`;
+      d3.style.transform = `scaleY(-1) translateZ(2px) matrix3d(${m3dSecond})`;
+    });
   })();
 }
 
