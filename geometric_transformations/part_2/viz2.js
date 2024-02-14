@@ -300,27 +300,29 @@ function main() {
   let mDiv3d = document.querySelector("#matrix3D")
   
   let qDiv3d = document.querySelector("#newPoint3D")
+
+  let frameCount = 0;
   
   function animate() {
     // 2D
-    m = rotateZ(m, Math.PI / 50);
-    
-    mDiv.innerHTML = matrixHTML(m);
-    
+    m = rotateZ(m, Math.PI / 50);    
     let q = pTimesM(p, m);
-    qDiv.innerHTML = matrixHTML(q);
-    
     d.style.transform = `scaleY(-1) matrix(${m})`;
-
+    
     // 3D
     m3d = rotateY3d(m3d, Math.PI / 50);
-    mDiv3d.innerHTML = matrixHTML(m3d);
-
     let q3d = pTimesM(p3d, m3d);
-    qDiv3d.innerHTML = matrixHTML(q3d);
-
+    
+    if (frameCount % 15 == 0) {
+      mDiv.innerHTML = matrixHTML(m);
+      qDiv.innerHTML = matrixHTML(q);
+      mDiv3d.innerHTML = matrixHTML(m3d);
+      qDiv3d.innerHTML = matrixHTML(q3d);
+    }
 
     d2.style.transform = `scaleY(-1) translateZ(2px) matrix3d(${m3d})`;
+
+    frameCount++;
 
     requestAnimationFrame(animate);
   }
