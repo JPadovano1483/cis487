@@ -115,9 +115,9 @@ function mTimesT(m, t) {
   // 3D
   } else {
     const [ m0, m1, m2, m3,
-      m4, m5, m6, m7,
-      m8, m9, m10, m11,
-      m12, m13, m14, m15 ] = m;
+            m4, m5, m6, m7,
+            m8, m9, m10, m11,
+            m12, m13, m14, m15 ] = m;
     const [ t0, t1, t2, t3,
             t4, t5, t6, t7,
             t8, t9, t10, t11,
