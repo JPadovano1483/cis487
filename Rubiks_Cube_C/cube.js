@@ -1,15 +1,20 @@
-// Jamie Padovano
 "use strict";
 
 let gl, shaderProgram, transform, transformUniform, colorUniform;
 
 class Transform {
 
-  constructor() {
-    this.matrix = [ 1, 0, 0, 0,
-                    0, 1, 0, 0,
-                    0, 0, 1, 0,
-                    0, 0, 0, 1 ];
+  constructor(matrix) {
+
+    if (matrix === undefined) {
+      this.matrix = [ 1, 0, 0, 0,
+                      0, 1, 0, 0,
+                      0, 0, 1, 0,
+                      0, 0, 0, 1 ];
+    } else {
+      this.matrix = matrix;
+    }
+    
     this.stack = [];
   }
   
@@ -76,7 +81,7 @@ class Transform {
     return this;
   }
   
-  rotate(angle, axis) {
+  rotate(angle, axis, pre=false) {
     const a = Math.PI * angle / 180;
     const c = Math.cos(a);
     const s = Math.sin(a);
@@ -101,8 +106,15 @@ class Transform {
             0,  0, 0, 1 ];
     }
 
-    this.matrix = Transform.multiply(this.matrix, m);
+    this.matrix = pre ?
+      Transform.multiply(m, this.matrix) :
+      Transform.multiply(this.matrix, m);
+
     return this;
+  }
+
+  preRotate(angle, axis) {
+    return this.rotate(angle, axis, true);
   }
   
   frustum(right, top, near, far) {
@@ -121,9 +133,9 @@ class Transform {
 class SubCube {
 
   constructor(x, y, z) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
+    this.x = this.x0 = x;
+    this.y = this.y0 = y;
+    this.z = this.z0 = z;
     this.rot = new Transform();
   }
 
@@ -148,30 +160,40 @@ class SubCube {
   draw() {
     transform.push();
     transform.multiplyBy(this.rot);
-    transform.translate(this.x, this.y, this.z);
-
-    // determine which sides to color
-    let isOutside = [...Array(6).fill(false)];
-    if (this.z == 1) isOutside[0] = true;
-    if (this.x == 1) isOutside[1] = true;
-    if (this.z == -1) isOutside[2] = true;
-    if (this.x == -1) isOutside[3] = true;
-    if (this.y == -1) isOutside[4] = true;
-    if (this.y == 1) isOutside[5] = true;
-
-    this.drawSquare([1, 0, 0], isOutside[0]); // +Z
+    transform.translate(this.x0, this.y0, this.z0);
+    
+    this.drawSquare([0, 0.6, 0.3], this.z0 === 1); // +Z
     transform.rotate(90, "Y");
-    this.drawSquare([0, 0, 1], isOutside[1]); // +X
+    this.drawSquare([0.8, 0, 0], this.x0 === 1); // +X
     transform.rotate(90, "Y");
-    this.drawSquare([1, 0.6, 0], isOutside[2]); // -Z
+    this.drawSquare([0.1, 0.4, 0.8], this.z0 === -1); // -Z
     transform.rotate(90, "Y");
-    this.drawSquare([0.1, 0.6, 0], isOutside[3]); // -X
+    this.drawSquare([0.9, 0.5, 0], this.x0 === -1); // -X
     transform.rotate(90, "X");
-    this.drawSquare([255, 255, 255], isOutside[4]); // -Y
+    this.drawSquare([0.9, 0.9, 0.9], this.y0 === -1); // -Y
     transform.rotate(180, "X");
-    this.drawSquare([1, 1, 0], isOutside[5]); // +Y
+    this.drawSquare([1, 0.8, 0], this.y0 === 1); // +Y
     
     transform.pop();
+  }
+
+  rotateXYZ(ccw, axis) {
+
+    if (axis === "X") {
+      let y = ccw ? -this.z : this.z;
+      this.z = ccw ? this.y : -this.y;
+      this.y = y;
+    
+    } else if (axis === "Y") {
+      let x = ccw ? this.z : -this.z;
+      this.z = ccw ? -this.x : this.x;
+      this.x = x;
+    
+    } else if (axis === "Z") {
+      let x = ccw ? -this.y : this.y;
+      this.y = ccw ? this.x : -this.x;
+      this.x = x;
+    }
   }
 }
 
@@ -257,31 +279,51 @@ function main() {
   transform.frustum(1, 0.75, 5, 35);
   transform.translate(0, 0, -20).rotate(20, "X").rotate(-30, "Y");
 
-  let subCubes = [ [ [], [], [] ],
-                   [ [], [], [] ],
-                   [ [], [], [] ] ];
+  let subCubes = [];
 
   for (let x = -1; x <= 1; x++)
     for (let y = -1; y <= 1; y++)
       for (let z = -1; z <= 1; z++)
-        subCubes[x + 1][y + 1].push(new SubCube(x, y, z));
+        subCubes.push(new SubCube(x, y, z));
 
-  function animate() {
-    transform.rotate(0.5, "Y");
+  function animate(frameCount, frameFunction, endFunction) {
+    return new Promise((resolve) => {
+      (function nextFrame() {
+        subCubes.forEach(frameFunction);
 
-    for (let i = 0; i < 3; i++)
-      for (let j = 0; j < 3; j++)
-        for (let k = 0; k < 3; k++) {
-          let c = subCubes[i][j][k];
-          c.draw();
-
-          if (c.x === 1) {
-            c.rot.rotate(1, "X");
-          }
+        if (--frameCount === 0) {
+          subCubes.forEach(endFunction);
+          resolve();
+        } else {
+          requestAnimationFrame(nextFrame);
         }
-
-    requestAnimationFrame(animate);
+      })();
+    });
   }
 
-  requestAnimationFrame(animate);
+  (async function randomGroupRotate() {
+
+    // pause
+    await animate(45, ()=>{}, ()=>{});
+    
+    // pick random group and rotation direction
+    const axis = (["X", "Y", "Z"])[Math.floor(Math.random() * 3)];
+    const group = Math.floor(Math.random() * 3) - 1;
+    const ccw = Math.random() < 0.5;
+
+    // rotate group
+    await animate(90,
+      (subCube) => {
+        if (subCube[axis.toLowerCase()] === group)
+          subCube.rot.preRotate(ccw ? 1 : -1, axis);
+        subCube.draw();
+      },
+      (subCube) => {
+        if (subCube[axis.toLowerCase()] === group)
+          subCube.rotateXYZ(ccw, axis);
+      }
+    );
+
+    randomGroupRotate();
+  })();
 }

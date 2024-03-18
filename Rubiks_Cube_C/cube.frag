@@ -1,4 +1,3 @@
-// Jamie Padovano
 uniform lowp vec3 color;
 
 void main(void) {
