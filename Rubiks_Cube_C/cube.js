@@ -128,6 +128,106 @@ class Transform {
     this.matrix = Transform.multiply(this.matrix, m);
     return this;
   }
+
+  static invert(transform) {
+    let [ m00, m01, m02, m03,
+          m10, m11, m12, m13,
+          m20, m21, m22, m23,
+          m30, m31, m32, m33 ] = transform.matrix;
+    
+    let i00 =  m11 * m22 * m33  -  m11 * m23 * m32 -
+               m21 * m12 * m33  +  m21 * m13 * m32 +
+               m31 * m12 * m23  -  m31 * m13 * m22;
+    
+    let i10 = -m10 * m22 * m33  +  m10 * m23 * m32 +
+               m20 * m12 * m33  -  m20 * m13 * m32 -
+               m30 * m12 * m23  +  m30 * m13 * m22;
+    
+    let i20 =  m10 * m21 * m33  -  m10 * m23 * m31 -
+               m20 * m11 * m33  +  m20 * m13 * m31 +
+               m30 * m11 * m23  -  m30 * m13 * m21;
+    
+    let i30 = -m10 * m21 * m32  +  m10 * m22 * m31 +
+               m20 * m11 * m32  -  m20 * m12 * m31 -
+               m30 * m11 * m22  +  m30 * m12 * m21;
+    
+    let det = m00 * i00 + m01 * i10 + m02 * i20 + m03 * i30;
+    
+    // Assume det != 0 (i.e., matrix has an inverse).
+      
+    i00 = i00 / det;
+    i10 = i10 / det;
+    i20 = i20 / det;
+    i30 = i30 / det;
+    
+    let i01 = (-m01 * m22 * m33  +  m01 * m23 * m32 +
+                m21 * m02 * m33  -  m21 * m03 * m32 -
+                m31 * m02 * m23  +  m31 * m03 * m22) / det;
+    
+    let i11 = ( m00 * m22 * m33  -  m00 * m23 * m32 -
+                m20 * m02 * m33  +  m20 * m03 * m32 +
+                m30 * m02 * m23  -  m30 * m03 * m22) / det;
+    
+    let i21 = (-m00 * m21 * m33  +  m00 * m23 * m31 +
+                m20 * m01 * m33  -  m20 * m03 * m31 -
+                m30 * m01 * m23  +  m30 * m03 * m21) / det;
+    
+    let i31 = ( m00 * m21 * m32  -  m00 * m22 * m31 -
+                m20 * m01 * m32  +  m20 * m02 * m31 +
+                m30 * m01 * m22  -  m30 * m02 * m21) / det;
+    
+    let i02 = ( m01 * m12 * m33  -  m01 * m13 * m32 -
+                m11 * m02 * m33  +  m11 * m03 * m32 +
+                m31 * m02 * m13  -  m31 * m03 * m12) / det;
+    
+    let i12 = (-m00 * m12 * m33  +  m00 * m13 * m32 +
+                m10 * m02 * m33  -  m10 * m03 * m32 -
+                m30 * m02 * m13  +  m30 * m03 * m12) / det;
+    
+    let i22 = ( m00 * m11 * m33  -  m00 * m13 * m31 -
+                m10 * m01 * m33  +  m10 * m03 * m31 +
+                m30 * m01 * m13  -  m30 * m03 * m11) / det;
+    
+    let i32 = (-m00 * m11 * m32  +  m00 * m12 * m31 +
+                m10 * m01 * m32  -  m10 * m02 * m31 -
+                m30 * m01 * m12  +  m30 * m02 * m11) / det;
+    
+    let i03 = (-m01 * m12 * m23  +  m01 * m13 * m22 +
+                m11 * m02 * m23  -  m11 * m03 * m22 -
+                m21 * m02 * m13  +  m21 * m03 * m12) / det;
+    
+    let i13 = ( m00 * m12 * m23  -  m00 * m13 * m22 -
+                m10 * m02 * m23  +  m10 * m03 * m22 +
+                m20 * m02 * m13  -  m20 * m03 * m12) / det;
+    
+    let i23 = (-m00 * m11 * m23  +  m00 * m13 * m21 +
+                m10 * m01 * m23  -  m10 * m03 * m21 -
+                m20 * m01 * m13  +  m20 * m03 * m11) / det;
+    
+    let i33 = ( m00 * m11 * m22  -  m00 * m12 * m21 -
+                m10 * m01 * m22  +  m10 * m02 * m21 +
+                m20 * m01 * m12  -  m20 * m02 * m11) / det;
+    
+    return new Transform([ i00, i01, i02, i03,
+                           i10, i11, i12, i13,
+                           i20, i21, i22, i23,
+                           i30, i31, i32, i33 ]);
+  }
+
+  static transform3DVertex(vertex, transformation) {
+    const [v0, v1, v2, v3] = [...Object.values(vertex), 1];
+    const [ t0, t1, t2, t3,
+            t4, t5, t6, t7,
+            t8, t9, t10, t11,
+            t12, t13, t14, t15 ] = transformation.matrix;
+
+    const [a, b, c, d] = [ t0 * v0 + t1 * v1 + t2 * v2 + t3 * v3,
+                         t4 * v0 + t5 * v1 + t6 * v2 + t7 * v3,
+                         t8 * v0 + t9 * v1 + t10 * v2 + t11 * v3,
+                         t12 * v0 + t13 * v1 + t14 * v2 + t15 * v3 ];
+
+    return { x: a / d, y: b / d, z: c / d };
+  }
 }
 
 class SubCube {
@@ -253,6 +353,9 @@ function setup(vertexShaderFileName, fragmentShaderFileName) {
 const sp = setup("cube.vert", "cube.frag");
 sp.then(main);
 
+let downX;
+let downY;
+
 function main() {
   gl.clearColor(1, 1, 1, 1);
   gl.enable(gl.DEPTH_TEST);
@@ -268,10 +371,10 @@ function main() {
   const vertexBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData),
-    gl.STATIC_DRAW);
+  gl.STATIC_DRAW);
   gl.vertexAttribPointer(vertexPositionAttribute,
     3, gl.FLOAT, false, 12, 0);
-
+    
   transformUniform = gl.getUniformLocation(shaderProgram, "transform");
   colorUniform = gl.getUniformLocation(shaderProgram, "color");
 
@@ -280,13 +383,19 @@ function main() {
   transform.translate(0, 0, -20).rotate(20, "X").rotate(-30, "Y");
 
   let subCubes = [];
-
+  
   for (let x = -1; x <= 1; x++)
     for (let y = -1; y <= 1; y++)
       for (let z = -1; z <= 1; z++)
         subCubes.push(new SubCube(x, y, z));
 
+      
+  window.addEventListener("mousedown", mousedownHandler);
+  window.addEventListener("mouseup", mouseupHandler);
+
   function animate(frameCount, frameFunction, endFunction) {
+    window.removeEventListener("mousedown", mousedownHandler);
+    window.removeEventListener("mouseup", mouseupHandler);
     return new Promise((resolve) => {
       (function nextFrame() {
         subCubes.forEach(frameFunction);
@@ -301,15 +410,13 @@ function main() {
     });
   }
 
-  (async function randomGroupRotate() {
-
-    // pause
-    await animate(45, ()=>{}, ()=>{});
+  async function randomGroupRotate(axis) {
     
     // pick random group and rotation direction
-    const axis = (["X", "Y", "Z"])[Math.floor(Math.random() * 3)];
-    const group = Math.floor(Math.random() * 3) - 1;
-    const ccw = Math.random() < 0.5;
+    // const axis = (["X", "Y", "Z"])[Math.floor(Math.random() * 3)];
+    // const group = Math.floor(Math.random() * 3) - 1;
+    const group = 1;
+    const ccw = true;
 
     // rotate group
     await animate(90,
@@ -324,6 +431,87 @@ function main() {
       }
     );
 
-    randomGroupRotate();
-  })();
+    window.addEventListener("mousedown", mousedownHandler);
+    window.addEventListener("mouseup", mouseupHandler);
+  }
+  // randomGroupRotate();
+
+  function mousedownHandler(event) {
+    let cv = document.querySelector("#canvas");
+    const xPos = event.pageX - cv.offsetLeft;
+    const yPos = event.pageY - cv.offsetTop;
+    const newCoords = coordsToCVV(xPos, yPos);
+    downX = newCoords.front.x;
+    downY = newCoords.front.y;
+    console.log(`Mouse Down: ${downX}, ${downY}`);
+  }
+  
+  function mouseupHandler(event) {
+    let cv = document.querySelector("#canvas");
+    const xPos = event.pageX - cv.offsetLeft;
+    const yPos = event.pageY - cv.offsetTop;
+    const newCoords = coordsToCVV(xPos, yPos);
+    const xChange = newCoords.front.x - downX;
+    const yChange = newCoords.front.y - downY;
+    console.log(`Mouse Up: ${xChange}, ${yChange}`);
+
+    const frustumPoints = calcFrustumPoints(newCoords);
+    const axis = calcPlaneIntersection(frustumPoints);
+  
+    // trigger random rotation
+    if (downX >= -1 && downX <= 1 && downY >= -1 && downY <= 1) randomGroupRotate(axis);
+  }
+
+  function coordsToCVV(canvasX, canvasY) {
+    let cv = document.querySelector("#canvas");
+    const x = (canvasX / cv.clientWidth) * 2 - 1;
+    const y = -((canvasY / cv.clientHeight) * 2 - 1);
+
+    const viewportX = x;
+    const viewportY = y;
+
+    return { front: { x: viewportX, y: viewportY, z: -1 }, back: {x: viewportX, y: viewportY, z: 1} };
+  }
+  
+  function calcFrustumPoints(points) {
+    const invertedSceneTransform = Transform.invert(transform);
+    const front = Transform.transform3DVertex(points.front, invertedSceneTransform);
+    const back = Transform.transform3DVertex(points.back, invertedSceneTransform);
+    return { front: front, back: back };
+  }
+
+  function calcPlaneIntersection(points) {
+    const deltaX = points.back.x - points.front.x;
+    const deltaY = points.back.y - points.front.y;
+    const deltaZ = points.back.z - points.front.z;
+
+    // x plane intersection
+    const xPlanePoint = {};
+    const tX = (1.5 - points.front.x) / deltaX;
+    xPlanePoint.x = 1.5;
+    xPlanePoint.y = points.front.y + deltaY * tX;
+    xPlanePoint.z = points.front.z + deltaZ * tX;
+
+    // y plane intersection
+    const yPlanePoint = {};
+    const tY = (1.5 - points.front.y) / deltaY;
+    yPlanePoint.y = 1.5;
+    yPlanePoint.x = points.front.x + deltaX * tY;
+    yPlanePoint.z = points.front.z + deltaZ * tY;
+    
+    // y plane intersection
+    const zPlanePoint = {};
+    const tZ = (1.5 - points.front.z) / deltaZ;
+    zPlanePoint.z = 1.5;
+    zPlanePoint.x = points.front.x + deltaX * tZ;
+    zPlanePoint.y = points.front.y + deltaY * tZ;
+
+    // determine correct face
+    let axis = "";
+    if (!Object.values(xPlanePoint).some(val => val < -1.5 || val > 1.5)) axis = "X";
+    else if (!Object.values(yPlanePoint).some(val => val < -1.5 || val > 1.5)) axis = "Y";
+    else if (!Object.values(zPlanePoint).some(val => val < -1.5 || val > 1.5)) axis = "Z";
+
+    return axis;
+  }
 }
