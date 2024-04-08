@@ -355,6 +355,7 @@ sp.then(main);
 
 let downX;
 let downY;
+let mouseDownCVV;
 
 function main() {
   gl.clearColor(1, 1, 1, 1);
@@ -410,23 +411,17 @@ function main() {
     });
   }
 
-  async function randomGroupRotate(axis) {
-    
-    // pick random group and rotation direction
-    // const axis = (["X", "Y", "Z"])[Math.floor(Math.random() * 3)];
-    // const group = Math.floor(Math.random() * 3) - 1;
-    const group = 1;
-    const ccw = true;
+  async function randomGroupRotate({ group, axis, ccw }) {
 
     // rotate group
     await animate(90,
       (subCube) => {
-        if (subCube[axis.toLowerCase()] === group)
+        if (subCube[axis?.toLowerCase()] === group)
           subCube.rot.preRotate(ccw ? 1 : -1, axis);
         subCube.draw();
       },
       (subCube) => {
-        if (subCube[axis.toLowerCase()] === group)
+        if (subCube[axis?.toLowerCase()] === group)
           subCube.rotateXYZ(ccw, axis);
       }
     );
@@ -440,9 +435,9 @@ function main() {
     let cv = document.querySelector("#canvas");
     const xPos = event.pageX - cv.offsetLeft;
     const yPos = event.pageY - cv.offsetTop;
-    const newCoords = coordsToCVV(xPos, yPos);
-    downX = newCoords.front.x;
-    downY = newCoords.front.y;
+    mouseDownCVV = coordsToCVV(xPos, yPos);
+    downX = mouseDownCVV.front.x;
+    downY = mouseDownCVV.front.y;
     console.log(`Mouse Down: ${downX}, ${downY}`);
   }
   
@@ -455,11 +450,16 @@ function main() {
     const yChange = newCoords.front.y - downY;
     console.log(`Mouse Up: ${xChange}, ${yChange}`);
 
-    const frustumPoints = calcFrustumPoints(newCoords);
-    const axis = calcPlaneIntersection(frustumPoints);
+    const frustumPointsDown = calcFrustumPoints(mouseDownCVV);
+    const planeIntersection = calcPlaneIntersection(frustumPointsDown);
+    
+    const frustumPointsUp = calcFrustumPoints(newCoords)
+    const mouseUpPoint = mouseReleasePoint(planeIntersection.plane, frustumPointsUp);
+    let direction = dragDirection(planeIntersection, mouseUpPoint);
+    const groupSelection = subgroupSelection(planeIntersection, mouseUpPoint, direction);
   
     // trigger random rotation
-    if (downX >= -1 && downX <= 1 && downY >= -1 && downY <= 1) randomGroupRotate(axis);
+    if (downX >= -1 && downX <= 1 && downY >= -1 && downY <= 1) randomGroupRotate(groupSelection);
   }
 
   function coordsToCVV(canvasX, canvasY) {
@@ -499,7 +499,7 @@ function main() {
     yPlanePoint.x = points.front.x + deltaX * tY;
     yPlanePoint.z = points.front.z + deltaZ * tY;
     
-    // y plane intersection
+    // z plane intersection
     const zPlanePoint = {};
     const tZ = (1.5 - points.front.z) / deltaZ;
     zPlanePoint.z = 1.5;
@@ -507,11 +507,140 @@ function main() {
     zPlanePoint.y = points.front.y + deltaY * tZ;
 
     // determine correct face
-    let axis = "";
-    if (!Object.values(xPlanePoint).some(val => val < -1.5 || val > 1.5)) axis = "X";
-    else if (!Object.values(yPlanePoint).some(val => val < -1.5 || val > 1.5)) axis = "Y";
-    else if (!Object.values(zPlanePoint).some(val => val < -1.5 || val > 1.5)) axis = "Z";
+    let plane = "";
+    let intersection = {};
+    if (!Object.values(xPlanePoint).some(val => val < -1.5 || val > 1.5)) {
+      plane = "X";
+      intersection = xPlanePoint;
+    }
+    else if (!Object.values(yPlanePoint).some(val => val < -1.5 || val > 1.5)) {
+      plane = "Y";
+      intersection = yPlanePoint;
+    }
+    else if (!Object.values(zPlanePoint).some(val => val < -1.5 || val > 1.5)) {
+      plane = "Z";
+      intersection = zPlanePoint;
+    }
 
-    return axis;
+    return { plane: plane,  ...intersection };
+  }
+
+  function mouseReleasePoint(plane, points) {
+    const deltaX = points.back.x - points.front.x;
+    const deltaY = points.back.y - points.front.y;
+    const deltaZ = points.back.z - points.front.z;
+    let planePoint = {};
+
+    if (plane == "X") {
+      const tX = (1.5 - points.front.x) / deltaX;
+      planePoint.x = 1.5;
+      planePoint.y = points.front.y + deltaY * tX;
+      planePoint.z = points.front.z + deltaZ * tX;
+    } else if (plane == "Y") {
+      const tY = (1.5 - points.front.y) / deltaY;
+      planePoint.y = 1.5;
+      planePoint.x = points.front.x + deltaX * tY;
+      planePoint.z = points.front.z + deltaZ * tY;
+    } else if (plane == "Z") {
+      const tZ = (1.5 - points.front.z) / deltaZ;
+      planePoint.z = 1.5;
+      planePoint.x = points.front.x + deltaX * tZ;
+      planePoint.y = points.front.y + deltaY * tZ;
+    }
+
+    return planePoint;
+  }
+
+  function dragDirection(planeIntersection, upPoint) {
+    const deltaX = Math.abs(upPoint.x - planeIntersection.x);
+    const deltaY = Math.abs(upPoint.y - planeIntersection.y);
+    const deltaZ = Math.abs(upPoint.z - planeIntersection.z);
+    let dragDirection = "";
+
+    if (planeIntersection.plane == "X") {
+      dragDirection = deltaY > deltaZ ? "Y" : "Z";
+    } else if (planeIntersection.plane == "Y") {
+      dragDirection = deltaX > deltaZ ? "X" : "Z";
+    } else if (planeIntersection.plane == "Z") {
+      dragDirection = deltaX > deltaY ? "X" : "Y";
+    }
+
+    return dragDirection;
+  }
+
+  function subgroupSelection(mouseDown, mouseUp, dragDirection) {
+    // return -1, 0, 1 for subgroup selection
+    let subcubeGroup;
+    let axis;
+    let ccw;
+    if (mouseDown.plane == "X") {
+      if (dragDirection == "Y") {
+        axis = "Z";
+        ccw = mouseDown.y < mouseUp.y;
+        if (mouseDown.z < -0.5) {
+          subcubeGroup = -1;
+        } else if (mouseDown.z < 0.5) {
+          subcubeGroup = 0;
+        } else {
+          subcubeGroup = 1;
+        }
+      } else if (dragDirection == "Z") {
+        axis = "Y";
+        ccw = mouseDown.z > mouseUp.z;
+        if (mouseDown.y < -0.5) {
+          subcubeGroup = -1;
+        } else if (mouseDown.y < 0.5) {
+          subcubeGroup = 0;
+        } else {
+          subcubeGroup = 1;
+        }
+      }
+    } else if (mouseDown.plane == "Y") {
+      if (dragDirection == "X") {
+        axis = "Z";
+        ccw = mouseDown.x > mouseUp.x;
+        if (mouseDown.z < -0.5) {
+          subcubeGroup = -1;
+        } else if (mouseDown.z < 0.5) {
+          subcubeGroup = 0;
+        } else {
+          subcubeGroup = 1;
+        }
+      } else if (dragDirection == "Z") {
+        axis = "X";
+        ccw = mouseDown.z < mouseUp.z;
+        if (mouseDown.x < -0.5) {
+          subcubeGroup = -1;
+        } else if (mouseDown.x < 0.5) {
+          subcubeGroup = 0;
+        } else {
+          subcubeGroup = 1;
+        }
+      }
+    } else if (mouseDown.plane == "Z") {
+      if (dragDirection == "X") {
+        axis = "Y";
+        ccw = mouseDown.x < mouseUp.x;
+        if (mouseDown.y < -0.5) {
+          subcubeGroup = -1;
+        } else if (mouseDown.y < 0.5) {
+          subcubeGroup = 0;
+        } else {
+          subcubeGroup = 1;
+        }
+      } else if (dragDirection == "Y") {
+        axis = "X";
+        ccw = mouseDown.y > mouseUp.y;
+        if (mouseDown.x < -0.5) {
+          subcubeGroup = -1;
+        } else if (mouseDown.x < 0.5) {
+          subcubeGroup = 0;
+        } else {
+          subcubeGroup = 1;
+        }
+      }
+    }
+
+    return { group: subcubeGroup, axis: axis, ccw: ccw };
   }
 }
