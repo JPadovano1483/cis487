@@ -1,3 +1,5 @@
+// Jamie Padovano
+
 "use strict";
 
 let gl, shaderProgram, transform, transformUniform, colorUniform;
@@ -429,7 +431,9 @@ function main() {
     window.addEventListener("mousedown", mousedownHandler);
     window.addEventListener("mouseup", mouseupHandler);
   }
-  // randomGroupRotate();
+
+  // this seems to trick the cube into getting initially drawn without having to randomly rotate a group
+  randomGroupRotate({group: 2, axis: "F", ccw: false});
 
   function mousedownHandler(event) {
     let cv = document.querySelector("#canvas");
@@ -458,8 +462,10 @@ function main() {
     let direction = dragDirection(planeIntersection, mouseUpPoint);
     const groupSelection = subgroupSelection(planeIntersection, mouseUpPoint, direction);
   
-    // trigger random rotation
-    if (downX >= -1 && downX <= 1 && downY >= -1 && downY <= 1) randomGroupRotate(groupSelection);
+    // trigger rotation
+    if (planeIntersection.x >= -1.5 && planeIntersection.x <= 1.5 
+        && planeIntersection.y >= -1.5 && planeIntersection.y <= 1.5 
+        && planeIntersection.z >= -1.5 && planeIntersection.z <= 1.5) randomGroupRotate(groupSelection);
   }
 
   function coordsToCVV(canvasX, canvasY) {
