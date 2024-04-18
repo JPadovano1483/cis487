@@ -1,3 +1,5 @@
+// Jamie Padovano
+
 import * as THREE from 'three';
 
 const SEPARATION = 2, AMOUNTX = 500, AMOUNTY = 500;
