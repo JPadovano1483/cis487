@@ -1,5 +1,7 @@
 // Jamie Padovano
 
+// Reference: https://github.com/mrdoob/three.js/blob/master/examples/webgl_points_waves.html
+
 import * as THREE from 'three';
 
 const SEPARATION = 2, AMOUNTX = 500, AMOUNTY = 500;
